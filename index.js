@@ -16,7 +16,16 @@ const client = new MongoClient(uri, {
 });
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    //create database and databaseCollection
+    const db = client.db("sports");
+    const sportsCollection = db.collection("facility");
+
+    //create post api (form)
+    app.post("/facility", (req, res) => {
+      const facilityData = req.body;
+      const result = sportsCollection.insertOne(facilityData);
+      res.json(result);
+    });
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
