@@ -1,12 +1,16 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const { MongoClient, ServerApiVersion } = require("mongodb");
 dotenv.config();
 
 const uri = process.env.MONGODB_URI;
 const app = express();
+
 const PORT = process.env.PORT;
 
+app.use(cors());
+app.use(express.json());
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -21,9 +25,10 @@ async function run() {
     const sportsCollection = db.collection("facility");
 
     //create post api (form)
-    app.post("/facility", (req, res) => {
+    app.post("/facility", async (req, res) => {
       const facilityData = req.body;
-      const result = sportsCollection.insertOne(facilityData);
+      console.log(facilityData);
+      const result = await sportsCollection.insertOne(facilityData);
       res.json(result);
     });
     await client.connect();
@@ -34,7 +39,7 @@ async function run() {
     );
   } finally {
     // Ensures that the client will close when you finish/error
-    await client.close();
+    // await client.close();
   }
 }
 run().catch(console.dir);
