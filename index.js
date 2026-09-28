@@ -24,6 +24,12 @@ async function run() {
     const db = client.db("sports");
     const sportsCollection = db.collection("facility");
 
+    //create get api find all Data
+    app.get("/facility", async (req, res) => {
+      const result = await sportsCollection.find().toArray();
+      res.json(result);
+    });
+
     //create post api (form)
     app.post("/facility", async (req, res) => {
       const facilityData = req.body;
