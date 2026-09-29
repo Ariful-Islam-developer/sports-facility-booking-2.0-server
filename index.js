@@ -48,12 +48,23 @@ async function run() {
     //create patch api for update
     app.patch("/facility/:id", async (req, res) => {
       const { id } = req.params;
-      const updateData = await sportsCollection.updateOne(
+      const updateData = req.body;
+      const result = await sportsCollection.updateOne(
         { _id: new ObjectId(id) },
         { $set: updateData },
       );
-      res.json(updateData);
+      res.json(result);
     });
+
+    //create delete api
+    app.delete("/facility/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await sportsCollection.deleteOne({
+        _id: new ObjectId(id),
+      });
+      res.json(result);
+    });
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
