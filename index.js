@@ -1,7 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 dotenv.config();
 
 const uri = process.env.MONGODB_URI;
@@ -30,12 +30,29 @@ async function run() {
       res.json(result);
     });
 
+    //create get api find single data
+    app.get("/facility/:id", async (req, res) => {
+      const { id } = req.params;
+      const result = await sportsCollection.findOne({ _id: new ObjectId(id) });
+      res.json(result);
+    });
+
     //create post api (form)
     app.post("/facility", async (req, res) => {
       const facilityData = req.body;
       console.log(facilityData);
       const result = await sportsCollection.insertOne(facilityData);
       res.json(result);
+    });
+
+    //create patch api for update
+    app.patch("/facility/:id", async (req, res) => {
+      const { id } = req.params;
+      const updateData = await sportsCollection.updateOne(
+        { _id: new ObjectId(id) },
+        { $set: updateData },
+      );
+      res.json(updateData);
     });
     await client.connect();
     // Send a ping to confirm a successful connection
