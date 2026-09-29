@@ -23,6 +23,7 @@ async function run() {
     //create database and databaseCollection
     const db = client.db("sports");
     const sportsCollection = db.collection("facility");
+    const bookingCollection = db.collection("conform");
 
     //create get api find all Data
     app.get("/facility", async (req, res) => {
@@ -61,6 +62,29 @@ async function run() {
       const { id } = req.params;
       const result = await sportsCollection.deleteOne({
         _id: new ObjectId(id),
+      });
+      res.json(result);
+    });
+
+    //create get api for my booking card
+    app.get("/conform/:userId", async (req, res) => {
+      const { userId } = req.params;
+      const result = await bookingCollection.find({ userId: userId }).toArray();
+      res.json(result);
+    });
+
+    //create post api for my booking card
+    app.post("/conform", async (req, res) => {
+      const data = req.body;
+      const result = await bookingCollection.insertOne(data);
+      res.json(result);
+    });
+
+    //create delete api for delete the booking card
+    app.delete("/conform/:bookingsId", async (req, res) => {
+      const { bookingsId } = req.params;
+      const result = await bookingCollection.deleteOne({
+        _id: new ObjectId(bookingsId),
       });
       res.json(result);
     });
