@@ -2,6 +2,7 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 dotenv.config();
 
 const uri = process.env.MONGODB_URI;
@@ -18,6 +19,26 @@ const client = new MongoClient(uri, {
     deprecationErrors: true,
   },
 });
+
+const JWKS = createRemoteJWKSet(new URL("http://localhost:3000/api/auth/jwks"));
+const verifyToken = async (req, res, next) => {
+  const authHeader = req?.headers.authorization;
+  if (!authHeader) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  const token = authHeader.split(" ")[1];
+  if (!token) {
+    return res.status(401).json({ message: "Unauthorized" });
+  }
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    console.log(payload);
+    next();
+  } catch (error) {
+    return res.status(401).json({ message: "Forbidden" });
+  }
+};
+
 async function run() {
   try {
     //create database and databaseCollection
@@ -26,20 +47,20 @@ async function run() {
     const bookingCollection = db.collection("conform");
 
     //create get api find all Data
-    app.get("/facility", async (req, res) => {
+    app.get("/facility", verifyToken, async (req, res) => {
       const result = await sportsCollection.find().toArray();
       res.json(result);
     });
 
     //create get api find single data
-    app.get("/facility/:id", async (req, res) => {
+    app.get("/facility/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       const result = await sportsCollection.findOne({ _id: new ObjectId(id) });
       res.json(result);
     });
 
     //create post api (form)
-    app.post("/facility", async (req, res) => {
+    app.post("/facility", verifyToken, async (req, res) => {
       const facilityData = req.body;
       console.log(facilityData);
       const result = await sportsCollection.insertOne(facilityData);
@@ -47,7 +68,7 @@ async function run() {
     });
 
     //create patch api for update
-    app.patch("/facility/:id", async (req, res) => {
+    app.patch("/facility/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       const updateData = req.body;
       const result = await sportsCollection.updateOne(
@@ -58,7 +79,7 @@ async function run() {
     });
 
     //create delete api
-    app.delete("/facility/:id", async (req, res) => {
+    app.delete("/facility/:id", verifyToken, async (req, res) => {
       const { id } = req.params;
       const result = await sportsCollection.deleteOne({
         _id: new ObjectId(id),
@@ -67,21 +88,21 @@ async function run() {
     });
 
     //create get api for my booking card
-    app.get("/conform/:userId", async (req, res) => {
+    app.get("/conform/:userId", verifyToken, async (req, res) => {
       const { userId } = req.params;
       const result = await bookingCollection.find({ userId: userId }).toArray();
       res.json(result);
     });
 
     //create post api for my booking card
-    app.post("/conform", async (req, res) => {
+    app.post("/conform", verifyToken, async (req, res) => {
       const data = req.body;
       const result = await bookingCollection.insertOne(data);
       res.json(result);
     });
 
     //create delete api for delete the booking card
-    app.delete("/conform/:bookingsId", async (req, res) => {
+    app.delete("/conform/:bookingsId", verifyToken, async (req, res) => {
       const { bookingsId } = req.params;
       const result = await bookingCollection.deleteOne({
         _id: new ObjectId(bookingsId),
